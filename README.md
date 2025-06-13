@@ -21,6 +21,7 @@ This project is a desktop application that acts as a patient-safety-focused Medi
 ## Features
 
 -   **Hybrid RAG Pipeline**: Augments LLM prompts with context from both a local ChromaDB vector store and real-time Google search results for comprehensive answers.
+-   **Medical-Specialized Embeddings**: Uses [MedEmbed-small-v0.1](https://huggingface.co/abhinand/MedEmbed-small-v0.1), a custom embedding model fine-tuned specifically for medical information retrieval, ensuring more accurate semantic search within medical contexts.
 -   **Structured and Safe Output**: Employs a strict system prompt to force the LLM into providing responses in a mandatory template (Triage, Condition, Steps, Medicine, Citations).
 -   **Safety-First Triage**: The system is designed to prioritize emergency escalation for severe symptoms.
 -   **GUI Interface**: A user-friendly and responsive desktop application built with PySide6 and the `qt_material` theme.
@@ -69,7 +70,6 @@ The following command will work without `uv`, but installing the packages may ta
 uv pip install -r requirements.txt
 ```
 
-
 ### 5. Obtain API Keys
 
 The application requires API keys for two services:
@@ -110,7 +110,7 @@ Before the first run, you must populate the local vector database. Run the inges
 python -m src.medical_assistant.data_ingestion
 ```
 
-This command reads your `.xlsx` file, generates embeddings for each sentence, and saves them in a `medical_chroma_db` folder. You only need to run this once or whenever your source Excel file is updated.
+This command reads your `.xlsx` file, generates embeddings for each sentence using the specialized medical embedding model, and saves them in a `medical_chroma_db` folder. You only need to run this once or whenever your source Excel file is updated.
 
 ### 2. Launch the Application
 
@@ -167,20 +167,29 @@ This section discusses the key architectural decisions and their implications.
     -   **Pro**: This provides the best of both worlds. The local DB ensures that specific, curated information (from `Assignment Data Base.xlsx`) is always available and prioritized. The web search allows the agent to answer questions about topics not present in the local data, making it far more versatile and up-to-date.
     -   **Con**: This approach increases complexity and latency. Each query involves a local similarity search *and* an external API call, making the response time slightly longer than a single-source RAG. It also introduces an additional external dependency (Serper API).
 
-### 2. Desktop Application (PySide6) vs. Web Application (Flask/FastAPI)
+### 2. Medical-Specialized Embedding Model vs. General-Purpose Embeddings
+
+-   **Decision**: The application uses [MedEmbed-small-v0.1](https://huggingface.co/abhinand/MedEmbed-small-v0.1), a specialized embedding model fine-tuned for medical information retrieval, rather than general-purpose embeddings like OpenAI's text-embedding models.
+-   **Trade-off**:
+    -   **Pro**: Medical-specialized embeddings significantly improve the semantic understanding and retrieval accuracy for medical terminology, symptoms, conditions, and treatments. This leads to more relevant context being retrieved from the knowledge base, resulting in better-informed responses. The model was specifically trained on medical literature and clinical data, making it highly optimized for healthcare applications.
+    -   **Con**: The specialized model may perform slightly worse on non-medical queries compared to general-purpose embeddings. Additionally, it introduces a dependency on a specific model that may have less community support or updates compared to mainstream embedding models. The model size and inference time might also differ from more optimized general-purpose alternatives.
+    -   **Reference**: Learn more about MedEmbed fine-tuned embedding models in this [Hugging Face blog post](https://huggingface.co/blog/abhinand/medembed-finetuned-embedding-models-for-medical-ir).
+
+### 3. Desktop Application (PySide6) vs. Web Application (Flask/FastAPI)
 
 -   **Decision**: The interface is a native desktop GUI built with PySide6.
 -   **Trade-off**:
     -   **Pro**: A desktop app is ideal for handling local resources like ChromaDB without exposing them over a network. It provides a stable, self-contained environment for the user and simplifies the deployment for single-user scenarios. It also avoids the complexities of web hosting, security (CORS, etc.), and state management in a browser.
     -   **Con**: The application is not easily shareable or accessible from multiple devices like a web app would be. Distribution requires packaging the application for different operating systems (e.g., using PyInstaller), which can be more complex than deploying a web server.
 
-### 3. LangGraph ReAct Agent vs. Simple LCEL Chain
+### 4. LangGraph ReAct Agent vs. Simple LCEL Chain
 
 -   **Decision**: A `create_react_agent` from LangGraph was used to orchestrate the LLM and its tools.
 -   **Trade-off**:
     -   **Pro**: The ReAct (Reasoning and Acting) framework is highly robust. It allows the LLM to "think" step-by-step, decide which tool to use (e.g., `google-serper`), use it, observe the result, and then repeat the process until it can form a final answer. This is crucial for a medical assistant that must find and cite sources accurately. It makes the agent more reliable and less prone to hallucination.
     -   **Con**: A ReAct agent is slower and more token-intensive than a simple LangChain Expression Language (LCEL) chain. The agent's "thought process" involves multiple back-and-forth calls to the LLM, increasing latency and cost compared to a single-pass `context -> prompt -> LLM` chain.
-### 4. Layered RAG: Pre-fetching Context and Agent Tool Access
+
+### 5. Layered RAG: Pre-fetching Context and Agent Tool Access
 
 -   **Decision**: The application employs a two-stage Retrieval-Augmented Generation (RAG) strategy. Before the user's query is sent to the LLM agent, an initial context is pre-fetched via a local vector database search (`ChromaDB`) and a direct `google-serper` web search. This combined context is then injected into the prompt alongside the user's original query. **Crucially**, the LangGraph ReAct agent also retains its inherent capability to execute its own `google-serper` tool calls if it determines more information is needed or if the pre-fetched context is insufficient.
 
@@ -193,7 +202,8 @@ This section discusses the key architectural decisions and their implications.
         -   **Redundancy and Cost**: There's a potential for redundant web searches. The initial pre-fetching might retrieve information that the agent then re-searches using its own tool, leading to increased API costs (for Serper) and unnecessary latency.
         -   **Increased Token Usage**: Injecting a potentially large volume of pre-fetched context into the initial prompt consumes more input tokens, which can increase the cost per query for the LLM.
         -   **Complexity**: Managing this layered approach adds complexity to the RAG pipeline compared to simply relying solely on the agent's internal tool-use capabilities. The LLM must intelligently integrate both pre-fetched and self-retrieved information.
-### 5. Background Workers (QThread) for Heavy Tasks
+
+### 6. Background Workers (QThread) for Heavy Tasks
 
 -   **Decision**: Long-running operations (agent initialization, document ingestion) are offloaded to background `QThread` workers.
 -   **Trade-off**:
@@ -213,3 +223,16 @@ python run_tests.py
 ```
 
 The tests use the `unittest.mock` library extensively to isolate components and test them without making real network calls or loading large models. This ensures the tests are fast, deterministic, and can run offline.
+
+---
+
+## Key Technical Highlights
+
+### Medical-Specialized Embeddings
+This project leverages **MedEmbed-small-v0.1**, a state-of-the-art embedding model specifically fine-tuned for medical information retrieval. Unlike general-purpose embedding models, MedEmbed was trained on extensive medical literature and clinical data, providing:
+
+- **Superior Medical Terminology Understanding**: Better semantic representation of medical terms, symptoms, and conditions
+- **Enhanced Clinical Context Retrieval**: More accurate matching between user queries and relevant medical information
+- **Improved Diagnostic Accuracy**: Better context retrieval leads to more informed and accurate first-aid recommendations
+
+For more technical details about the MedEmbed model family and their performance on medical IR tasks, see the [comprehensive blog post](https://huggingface.co/blog/abhinand/medembed-finetuned-embedding-models-for-medical-ir) by the model authors.
