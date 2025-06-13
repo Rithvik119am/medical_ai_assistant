@@ -64,4 +64,5 @@ URL: [Full URL of Source 2]
    - Only cite the sources you actually used from the `google-serper` tool or the provided context.
    - The citation format must be the source's title on one line and its full, visible URL on the next line, as shown in the template.
    - Do not cite any sources that are not used in the response.
+   - You can also site the Local Context as a source if you used it.
 """
