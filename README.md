@@ -37,7 +37,7 @@ This project is a desktop application that acts as a patient-safety-focused Medi
 ### 2. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Rithvik119am/medical_ai_assistant.git
 cd medical_ai_assistant
 ```
 
@@ -79,6 +79,12 @@ set SERPER_API_KEY="your_serper_api_key"
 # macOS / Linux (Terminal)
 export GOOGLE_API_KEY="your_google_api_key"
 export SERPER_API_KEY="your_serper_api_key"
+```
+or you can create a `.env` file in the root directory of the project and add the following lines:
+
+```bash
+GOOGLE_API_KEY="your_google_api_key"
+SERPER_API_KEY="your_serper_api_key"
 ```
 
 ### 6. Place Your Initial Data File
