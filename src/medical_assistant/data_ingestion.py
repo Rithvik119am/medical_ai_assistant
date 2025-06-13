@@ -48,7 +48,6 @@ def ingest_main():
     vectorstore = None
     documents_to_add = []
 
-    # Check for existing Chroma DB based on directory existence and file names
     chroma_db_exists = os.path.exists(PERSIST_DIR) and any(f.startswith('chroma') for f in os.listdir(PERSIST_DIR))
 
     if chroma_db_exists:

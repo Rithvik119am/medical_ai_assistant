@@ -5,7 +5,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_community.agent_toolkits.load_tools import load_tools
 from langgraph.prebuilt import create_react_agent
-from langchain_core.prompts import ChatPromptTemplate
 
 from src.medical_assistant.config import PERSIST_DIR, EMBEDDING_MODEL_NAME, LLM_MODEL_NAME, system_prompt
 
@@ -15,25 +14,20 @@ def create_medical_agent(api_key: str):
     Initializes and returns the medical agent and vector store.
     """
     try:
-        # Initialize LLM
         llm = ChatGoogleGenerativeAI(
             model=LLM_MODEL_NAME,
             google_api_key=api_key,
             temperature=0.5,
         )
 
-        # Initialize Embedding Model
         embedding_model = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 
-        # Initialize Chroma Vector Store
         vectorstore = Chroma(
             persist_directory=PERSIST_DIR, embedding_function=embedding_model
         )
 
-        # Load Tools (DuckDuckGo Search)
         tools = load_tools(["google-serper"])
 
-        # Create React Agent
         agent_executor = agent = create_react_agent(model=llm,tools=tools,prompt=system_prompt)
 
         return agent_executor, vectorstore
