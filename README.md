@@ -2,9 +2,12 @@
 
 This project is a desktop application that acts as a patient-safety-focused Medical First-Aid Assistant. It uses a Retrieval-Augmented Generation (RAG) pipeline, combining a local vector database, real-time web search, and a large language model (Google's Gemini) to provide structured, safety-conscious first-aid guidance.
 
+## High-Level Architecture
+![High-Level-Architecture](assets/High-Level-Architecture.png)
+
 ## Data Flow Diagram
 
-![Data-Flow-Diagram](assets/Data-Flow-Diagram.svg)
+![Data-Flow-Diagram](assets/Data-Flow-Diagram.png)
 
 ## Table of Contents
 
