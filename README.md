@@ -59,9 +59,11 @@ source venv/bin/activate
 
 Install all required Python packages from the `requirements.txt` file.
 
+The following command will work without `uv`, but installing the packages may take significantly longer. Using `uv` is recommended for faster installation.
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
+
 
 ### 5. Obtain API Keys
 
