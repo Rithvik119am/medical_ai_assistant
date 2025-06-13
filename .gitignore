@@ -1,0 +1,5 @@
+.env
+.venv
+medical_chroma_db
+*.pyc
+
