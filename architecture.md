@@ -85,11 +85,11 @@ The Medical First-Aid AI Assistant is a desktop application that provides safety
 
 ![Data-Flow-Diagram](assets/Data-Flow-Diagram.png)
 
-## System Initialization Flow
-![System-Initialization-Flow](assets/System-Initialization-Flow.png)
-
 ## Query Processing Architecture
 ![Query-Processing-Architecture](assets/Query-Processing-Architecture.png)
+
+## System Initialization Flow
+![System-Initialization-Flow](assets/System-Initialization-Flow.png)
 
 
 ## Security and Safety Architecture
