@@ -4,7 +4,7 @@ This project is a desktop application that acts as a patient-safety-focused Medi
 
 ## Data Flow Diagram
 
-![Data-Flow-Diagram](assets/Data-Flow-Diagram.png)
+![Data-Flow-Diagram](assets/Data-Flow-Diagram.svg)
 
 ## Table of Contents
 
